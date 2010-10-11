@@ -99,6 +99,21 @@ public class FTPPublisher extends Notifier {
 		return entries;
 	}
 
+    public String getSiteName() {
+		String name = siteName;
+		if (name == null) {
+			FTPSite[] sites = DESCRIPTOR.getSites();
+			if (sites.length > 0) {
+				name = sites[0].getName();
+			}
+		}
+		return name;
+	}
+
+	public void setSiteName(String siteName) {
+		this.siteName = siteName;
+	}
+
 	/**
 	 * This method returns the configured FTPSite object which match the siteName of the FTPPublisher instance. (see Manage Hudson and System
 	 * Configuration point FTP)
