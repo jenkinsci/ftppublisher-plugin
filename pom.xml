@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -14,7 +15,7 @@
 	<packaging>hpi</packaging>
 	<name>FTP publisher plugin</name>
 	<version>1.1-SNAPSHOT</version>
-	<description>Make it possible to upload artifacts and other resources to a ftp server.</description>
+	<description>Upload artifacts and other resources to an ftp server.</description>
 	<url>http://wiki.hudson-ci.org/display/HUDSON/FTP-Publisher+Plugin</url>
 
 	<developers>
@@ -22,6 +23,11 @@
 			<id>benjaminjaton</id>
 			<name>Benjamin Jaton</name>
 			<email>benjamin.jaton@gmail.com</email>
+		</developer>
+		<developer>
+			<id>jacob_robertson</id>
+			<name>Jacob Robertson</name>
+			<email>jacob.robertson.work@gmail.com</email>
 		</developer>
 	</developers>
 
@@ -51,5 +57,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- This section required for releasing with new jenkins infrastructure when on older versions of parent pom -->
+	<scm>
+		<connection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</connection>
+		<developerConnection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</developerConnection>
+		<url>https://hudson.dev.java.net/source/browse/hudson/trunk/hudson/plugins/ftppublisher</url>
+	</scm>
+	
 </project>
 
