@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.net.ftp.FTPClient;
 
 import com.jcraft.jsch.SftpException;
@@ -138,10 +139,10 @@ public class FTPSite {
 	 * @return the display name
 	 */
 	public String getDisplayName() {
-		if (profileName != null) {
-			return profileName;
-		} else {
+		if (StringUtils.isEmpty(profileName)) {
 			return hostname;
+		} else {
+			return profileName;
 		}
 	}
 
