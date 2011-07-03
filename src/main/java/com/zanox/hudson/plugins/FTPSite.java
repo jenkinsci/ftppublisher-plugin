@@ -28,6 +28,9 @@ public class FTPSite {
 	/** The Constant DEFAULT_FTP_PORT. */
 	private static final int DEFAULT_FTP_PORT = 21;
 
+	/** The profile name. */
+	private String profileName;
+
 	/** The hostname. */
 	private String hostname;
 
@@ -59,6 +62,8 @@ public class FTPSite {
 	/**
 	 * Instantiates a new FTP site.
 	 * 
+	 * @param profileName
+	 *          the profile name
 	 * @param hostname
 	 *          the hostname
 	 * @param port
@@ -72,7 +77,8 @@ public class FTPSite {
 	 * @param ftpDir
 	 *          the ftp dir
 	 */
-	public FTPSite(String hostname, int port, int timeOut, String username, String password, String ftpDir) {
+	public FTPSite(String profileName, String hostname, int port, int timeOut, String username, String password, String ftpDir) {
+		this.profileName = profileName;
 		this.hostname = hostname;
 		this.port = port;
 		this.timeOut = timeOut;
@@ -124,6 +130,38 @@ public class FTPSite {
 	 */
 	public void setTimeOut(int timeOut) {
 		this.timeOut = timeOut;
+	}
+
+	/**
+	 * Gets the display name.
+	 * 
+	 * @return the display name
+	 */
+	public String getDisplayName() {
+		if (profileName != null) {
+			return profileName;
+		} else {
+			return hostname;
+		}
+	}
+
+	/**
+	 * Gets the profile name.
+	 * 
+	 * @return the profile name
+	 */
+	public String getProfileName() {
+		return profileName;
+	}
+
+	/**
+	 * Sets the profile name.
+	 * 
+	 * @param profileName
+	 *          the new profile name
+	 */
+	public void setProfileName(String profileName) {
+		this.profileName = profileName;
 	}
 
 	/**

@@ -5,7 +5,7 @@
   <f:entry title="FTP site">
     <select class="setting-input" name="ftp.siteName" description="Select configured ftp host.Check global hudson config for defining connection properties for this hosts">
       <j:forEach var="s" items="${descriptor.sites}">
-        <f:option selected="${s.name==instance.siteName}">${s.name}</f:option>
+        <f:option selected="${s.displayName==instance.siteName}">${s.displayName}</f:option>
       </j:forEach>
     </select>
   </f:entry>
@@ -35,7 +35,11 @@
   </f:entry>
   
   <f:entry title="Flatten files" help="${helpURL}/help-flatten.html">
-    <f:checkbox name="publisher.flatten" checked="${instance.flatten}" />
+    <f:checkbox name="publisher.flatten" checked="${descriptor.isFlatten(instance)}" />
+  </f:entry>
+
+  <f:entry title="Skip publishing (e.g. temporarily)">
+    <f:checkbox name="publisher.skip" checked="${instance.skip}" />
   </f:entry>
   
 </j:jelly>

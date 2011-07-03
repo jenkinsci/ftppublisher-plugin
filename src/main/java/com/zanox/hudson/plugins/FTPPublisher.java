@@ -1,7 +1,6 @@
 package com.zanox.hudson.plugins;
 
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -17,18 +16,14 @@ import hudson.util.CopyOnWriteList;
 import hudson.util.FormValidation;
 
 import java.io.IOException;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.StaplerRequest;
-
-import com.jcraft.jsch.SftpException;
 
 /**
  * <p>
@@ -59,6 +54,7 @@ public class FTPPublisher extends Notifier {
 	private final List<Entry> entries = new ArrayList<Entry>();
 	private Boolean useTimestamps = false;
 	private Boolean flatten = true;
+	private Boolean skip = false;
 
 	public void setUseTimestamps(boolean useTimestamps) {
 		this.useTimestamps = useTimestamps;
@@ -75,7 +71,15 @@ public class FTPPublisher extends Notifier {
 	public boolean isFlatten() {
 		return flatten;
 	}
+	
+	public void setSkip(boolean skip) {
+		this.skip = skip;
+	}
 
+	public boolean isSkip() {
+		return skip;
+	}
+	
 	public FTPPublisher() {
 		int a = 2;
 	}
@@ -127,7 +131,7 @@ public class FTPPublisher extends Notifier {
 			return sites[0];
 		}
 		for (FTPSite site : sites) {
-			if (site.getName().equals(siteName)) {
+			if (site.getDisplayName().equals(siteName)) {
 				return site;
 			}
 		}
@@ -152,6 +156,11 @@ public class FTPPublisher extends Notifier {
 	 */
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+		
+		if (skip) {
+			listener.getLogger().println("Publish artifacts to FTP - Skipping... ");
+			return true;
+		}
 		if (build.getResult() == Result.FAILURE || build.getResult() == Result.ABORTED) {
 			// build failed. don't post
 			return true;
@@ -196,12 +205,24 @@ public class FTPPublisher extends Notifier {
 
 		private final CopyOnWriteList<FTPSite> sites = new CopyOnWriteList<FTPSite>();
 
+		/** Whether to flatten files by default */
+		private boolean flattenFilesSelectedByDefault;
+
 		/**
 		 * The default constructor.
 		 */
 		public DescriptorImpl() {
 			super(FTPPublisher.class);
 			load();
+		}
+		
+		public void setFlattenFilesSelectedByDefault(
+				boolean flattenFilesSelectedByDefault) {
+			this.flattenFilesSelectedByDefault = flattenFilesSelectedByDefault;
+		}
+		
+		public boolean isFlattenFilesSelectedByDefault() {
+			return flattenFilesSelectedByDefault;
 		}
 
 		/**
@@ -258,6 +279,14 @@ public class FTPPublisher extends Notifier {
 			return pub;
 		}
 
+		public boolean isFlatten(FTPPublisher pub) {
+			if (pub != null) {
+				return pub.isFlatten();
+			} else {
+				return flattenFilesSelectedByDefault;
+			}
+		}
+		
 		/**
 		 * The getter of the sites field.
 		 * 
@@ -284,6 +313,7 @@ public class FTPPublisher extends Notifier {
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData) {
 			sites.replaceBy(req.bindParametersToList(FTPSite.class, "ftp."));
+			flattenFilesSelectedByDefault = formData.getBoolean("flattenFilesSelectedByDefault");
 			save();
 			return true;
 		}

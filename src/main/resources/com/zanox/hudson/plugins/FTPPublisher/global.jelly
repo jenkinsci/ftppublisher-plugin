@@ -5,6 +5,9 @@
       description="FTP sites that projects will want to connect">
       <f:repeatable var="site" items="${descriptor.sites}">
         <table width="100%">
+          <f:entry title="Profile Name" help="/plugin/ftppublisher/help-profilename.html">
+            <f:textbox name="ftp.profileName" value="${site.profileName}"/>
+          </f:entry>
           <f:entry title="hostname" help="/plugin/ftppublisher/help-hostname.html">
             <f:textbox name="ftp.hostname" value="${site.hostname}"/>
           </f:entry>
@@ -36,6 +39,9 @@
           </f:entry>
         </table>
       </f:repeatable>
+    </f:entry>
+    <f:entry title="Flatten Files selected by default" help="/plugin/ftppublisher/help-flattenfilesselectedbydefault.html">
+      <f:checkbox name="flattenFilesSelectedByDefault" checked="${descriptor.flattenFilesSelectedByDefault}"/>
     </f:entry>
   </f:section>
 
