@@ -62,7 +62,7 @@
 	<scm>
 		<connection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</connection>
 		<developerConnection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</developerConnection>
-		<url>https://hudson.dev.java.net/source/browse/hudson/trunk/hudson/plugins/ftppublisher</url>
+		<url>https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</url>
 	</scm>
 	
 </project>
