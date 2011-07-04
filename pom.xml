@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -54,15 +55,29 @@
 					<compatibleSinceVersion>1.0</compatibleSinceVersion>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<goals>deploy</goals>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
-	<!-- This section required for releasing with new jenkins infrastructure when on older versions of parent pom -->
+	<!-- This section required for releasing with new jenkins infrastructure 
+		when on older versions of parent pom -->
 	<scm>
 		<connection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</connection>
 		<developerConnection>scm:svn:https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</developerConnection>
 		<url>https://svn.jenkins-ci.org/trunk/hudson/plugins/ftppublisher</url>
 	</scm>
-	
+
+	<distributionManagement>
+		<repository>
+			<id>maven.jenkins-ci.org</id>
+			<url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
+		</repository>
+	</distributionManagement>
+
 </project>
 
