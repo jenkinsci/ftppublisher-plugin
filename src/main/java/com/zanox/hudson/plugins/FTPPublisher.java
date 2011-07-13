@@ -157,7 +157,7 @@ public class FTPPublisher extends Notifier {
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
 		
-		if (skip) {
+		if (skip != null && skip) {
 			listener.getLogger().println("Publish artifacts to FTP - Skipping... ");
 			return true;
 		}
