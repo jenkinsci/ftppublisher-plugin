@@ -1,13 +1,7 @@
 package com.zanox.hudson.plugins;
 
-import hudson.Extension;
-import hudson.Launcher;
-import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
-import hudson.model.Result;
+import hudson.*;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -15,15 +9,21 @@ import hudson.tasks.Publisher;
 import hudson.util.CopyOnWriteList;
 import hudson.util.FormValidation;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.annotation.Nonnull;
 
 /**
  * <p>
@@ -38,7 +38,7 @@ import org.kohsuke.stapler.StaplerRequest;
  * @author $Author: ZANOX-COM\fit $
  * 
  */
-public class FTPPublisher extends Notifier {
+public class FTPPublisher extends Notifier implements SimpleBuildStep {
 
 	/**
 	 * Hold an instance of the Descriptor implementation of this publisher.
@@ -51,10 +51,28 @@ public class FTPPublisher extends Notifier {
 	 */
 	protected static final SimpleDateFormat ID_FORMATTER = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 	private String siteName;
-	private final List<Entry> entries = new ArrayList<Entry>();
+	public  List<Entry> entries = new ArrayList<Entry>();
 	private Boolean useTimestamps = false;
 	private Boolean flatten = true;
 	private Boolean skip = false;
+
+	/**
+	 * The constructor which take a configured ftp site name to publishing the artifacts.
+	 *
+	 * @param siteName
+	 *          the name of the ftp site configuration to use
+	 */
+	@DataBoundConstructor
+	public FTPPublisher(String siteName, List<Entry> entries, boolean useTimestamps, boolean skip, boolean flatten) {
+		this.skip = skip;
+		this.flatten = flatten;
+		this.entries = entries;
+		this.useTimestamps = useTimestamps;
+		this.siteName = siteName;
+		this.siteName = getSiteName();
+	}
+
+
 
 	public void setUseTimestamps(boolean useTimestamps) {
 		this.useTimestamps = useTimestamps;
@@ -67,6 +85,9 @@ public class FTPPublisher extends Notifier {
 	public void setFlatten(boolean flatten) {
 		this.flatten = flatten;
 	}
+	public boolean getFlatten() { return flatten; }
+	public boolean getUseTimestamps() { return useTimestamps;}
+	public boolean getSkip() {return skip;}
 
 	public boolean isFlatten() {
 		return flatten;
@@ -79,20 +100,11 @@ public class FTPPublisher extends Notifier {
 	public boolean isSkip() {
 		return skip;
 	}
-	
+
 	public FTPPublisher() {
 		int a = 2;
 	}
 
-	/**
-	 * The constructor which take a configured ftp site name to publishing the artifacts.
-	 * 
-	 * @param siteName
-	 *          the name of the ftp site configuration to use
-	 */
-	public FTPPublisher(String siteName) {
-		this.siteName = siteName;
-	}
 
 	/**
 	 * The getter for the entries field. (this field is set by the UI part of this plugin see config.jelly file)
@@ -102,6 +114,7 @@ public class FTPPublisher extends Notifier {
 	public List<Entry> getEntries() {
 		return entries;
 	}
+
 
     public String getSiteName() {
 		String name = siteName;
@@ -142,9 +155,14 @@ public class FTPPublisher extends Notifier {
 		return BuildStepMonitor.BUILD;
 	}
 
+	@Override
+	public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+		performHelper(run, filePath, run.getEnvironment(listener), launcher, listener.getLogger());
+	}
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -152,13 +170,16 @@ public class FTPPublisher extends Notifier {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 *           {@inheritDoc}
-	 * @see hudson.tasks.BuildStep#perform(hudson.model.Build, hudson.Launcher, hudson.model.BuildListener)
+	 * @see hudson.tasks.BuildStep
 	 */
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-		
+		return performHelper(build, build.getWorkspace(), build.getEnvironment(listener), launcher, listener.getLogger());
+	}
+
+	public boolean performHelper(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, EnvVars envVars, @Nonnull Launcher launcher, @Nonnull PrintStream logger) throws InterruptedException, IOException {
 		if (skip != null && skip) {
-			listener.getLogger().println("Publish artifacts to FTP - Skipping... ");
+			logger.println("Publish artifacts to FTP - Skipping... ");
 			return true;
 		}
 		if (build.getResult() == Result.FAILURE || build.getResult() == Result.ABORTED) {
@@ -169,9 +190,12 @@ public class FTPPublisher extends Notifier {
 		FTPSite ftpsite = null;
 		try {
 			ftpsite = getSite();
-			listener.getLogger().println("Connecting to " + ftpsite.getHostname());
+			logger.println("Connecting to " + ftpsite.getHostname());
 			ftpsite.createSession();
-			EntryCopier copier = new EntryCopier(build, listener, ftpsite, flatten, useTimestamps);
+
+
+
+			EntryCopier copier = new EntryCopier(build, filePath, logger, ftpsite, envVars, flatten, useTimestamps);
 
 			int copied = 0;
 
@@ -179,10 +203,10 @@ public class FTPPublisher extends Notifier {
 				copied += copier.copy(e);
 			}
 
-			listener.getLogger().println("Transfered " + copied + " files.");
+			logger.println("Transfered " + copied + " files.");
 
 		} catch (Throwable th) {
-			th.printStackTrace(listener.error("Failed to upload files"));
+			logger.println("Failed to upload files");
 			build.setResult(Result.UNSTABLE);
 		} finally {
 			if (ftpsite != null) {
@@ -192,6 +216,8 @@ public class FTPPublisher extends Notifier {
 
 		return true;
 	}
+
+
 
 	/**
 	 * <p>

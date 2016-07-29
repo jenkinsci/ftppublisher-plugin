@@ -1,5 +1,11 @@
 package com.zanox.hudson.plugins;
 
+import hudson.Extension;
+import hudson.Util;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import org.kohsuke.stapler.DataBoundConstructor;
+
 /**
  * <p>
  * This class implements the data object for the ftp plugin. The fields can be configured in the job
@@ -15,7 +21,7 @@ package com.zanox.hudson.plugins;
  * @author $Author: ZANOX-COM\fit $
  * 
  */
-public final class Entry {
+public final class Entry implements Describable<Entry> {
 
     /**
      * Destination folder for the copy. May contain macros.
@@ -29,4 +35,24 @@ public final class Entry {
      * May contain macro, wildcard.
      */
     public String sourceFile;
+
+    @DataBoundConstructor
+    public Entry(String filePath, String sourceFile) {
+        this.filePath = filePath;
+        this.sourceFile = sourceFile;
+    }
+
+    @Override
+    public Descriptor<Entry> getDescriptor() {
+        return new DescriptorImpl();
+    }
+
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<Entry> {
+        @Override
+        public String getDisplayName() {
+            return "hello";
+        }
+    }
+
 }
