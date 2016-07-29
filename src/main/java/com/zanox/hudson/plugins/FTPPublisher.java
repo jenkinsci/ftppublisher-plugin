@@ -1,9 +1,6 @@
 package com.zanox.hudson.plugins;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.Util;
+import hudson.*;
 import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -12,7 +9,9 @@ import hudson.tasks.Publisher;
 import hudson.util.CopyOnWriteList;
 import hudson.util.FormValidation;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -158,40 +157,12 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 
 	@Override
 	public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath filePath, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
-
-		if (skip != null && skip) {
-			listener.getLogger().println("Publish artifacts to FTP - Skipping... ");
-			return;
-		}
-
-		FTPSite ftpsite = null;
-		try {
-			ftpsite = getSite();
-			listener.getLogger().println("Connecting to " + ftpsite.getHostname());
-			ftpsite.createSession();
-			EntryCopierPipeline copier = new EntryCopierPipeline(run, filePath, listener, ftpsite, flatten, useTimestamps);
-
-			int copied = 0;
-
-			for (Entry e : entries) {
-				copied += copier.copy(e);
-			}
-
-			listener.getLogger().println("Transfered " + copied + " files.");
-
-		} catch (Throwable th) {
-			th.printStackTrace(listener.error("Failed to upload files"));
-			run.setResult(Result.UNSTABLE);
-		} finally {
-			if (ftpsite != null) {
-				ftpsite.closeSession();
-			}
-		}
+		performHelper(run, filePath, run.getEnvironment(listener), launcher, listener.getLogger());
 	}
 
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * @param build
 	 * @param launcher
 	 * @param listener
@@ -203,9 +174,12 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 	 */
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-		
+		return performHelper(build, build.getWorkspace(), build.getEnvironment(listener), launcher, listener.getLogger());
+	}
+
+	public boolean performHelper(@Nonnull Run<?, ?> build, @Nonnull FilePath filePath, EnvVars envVars, @Nonnull Launcher launcher, @Nonnull PrintStream logger) throws InterruptedException, IOException {
 		if (skip != null && skip) {
-			listener.getLogger().println("Publish artifacts to FTP - Skipping... ");
+			logger.println("Publish artifacts to FTP - Skipping... ");
 			return true;
 		}
 		if (build.getResult() == Result.FAILURE || build.getResult() == Result.ABORTED) {
@@ -216,9 +190,12 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 		FTPSite ftpsite = null;
 		try {
 			ftpsite = getSite();
-			listener.getLogger().println("Connecting to " + ftpsite.getHostname());
+			logger.println("Connecting to " + ftpsite.getHostname());
 			ftpsite.createSession();
-			EntryCopier copier = new EntryCopier(build, listener, ftpsite, flatten, useTimestamps);
+
+
+
+			EntryCopier copier = new EntryCopier(build, filePath, logger, ftpsite, envVars, flatten, useTimestamps);
 
 			int copied = 0;
 
@@ -226,10 +203,10 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 				copied += copier.copy(e);
 			}
 
-			listener.getLogger().println("Transfered " + copied + " files.");
+			logger.println("Transfered " + copied + " files.");
 
 		} catch (Throwable th) {
-			th.printStackTrace(listener.error("Failed to upload files"));
+			logger.println("Failed to upload files");
 			build.setResult(Result.UNSTABLE);
 		} finally {
 			if (ftpsite != null) {
@@ -239,6 +216,8 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 
 		return true;
 	}
+
+
 
 	/**
 	 * <p>
@@ -315,18 +294,16 @@ public class FTPPublisher extends Notifier implements SimpleBuildStep {
 		 * @return {@inheritDoc}
 		 * @see hudson.model.Descriptor#newInstance(org.kohsuke.stapler.StaplerRequest)
 		 */
-		/*@Override
+		@Override
 		public Publisher newInstance(StaplerRequest req, JSONObject formData) {
 			FTPPublisher pub = new FTPPublisher();
 			pub.setFlatten(formData.getBoolean("flatten"));
 			pub.setUseTimestamps(formData.getBoolean("useTimestamps"));
-			pub.setSkip(formData.getBoolean("skip"));
 			req.bindParameters(pub, "publisher.");
 			req.bindParameters(pub, "ftp.");
 			pub.getEntries().addAll(req.bindParametersToList(Entry.class, "ftp.entry."));
-			pub.getEntries().add(new Entry("hey", "pey"));
 			return pub;
-		}*/
+		}
 
 		public boolean isFlatten(FTPPublisher pub) {
 			if (pub != null) {
